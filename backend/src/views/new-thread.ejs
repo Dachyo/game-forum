@@ -1,0 +1,26 @@
+<%- include('_header', { title: 'Новая тема — ИгроФорум' }) %>
+
+<h1>Создать новую тему</h1>
+
+<% if (error) { %>
+  <p class="error-message"><%= error %></p>
+<% } %>
+
+<form action="/threads/new" method="POST" class="form-card">
+  <label for="title">Заголовок темы</label>
+  <input type="text" id="title" name="title" required maxlength="200">
+
+  <label for="category_id">Категория</label>
+  <select id="category_id" name="category_id" required>
+    <% categories.forEach(c => { %>
+      <option value="<%= c.id %>"><%= c.name %></option>
+    <% }) %>
+  </select>
+
+  <label for="body">Сообщение</label>
+  <textarea id="body" name="body" rows="6" required></textarea>
+
+  <button type="submit" class="btn-primary">Создать тему</button>
+</form>
+
+<%- include('_footer') %>

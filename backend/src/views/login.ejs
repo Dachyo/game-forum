@@ -1,0 +1,20 @@
+<%- include('_header', { title: 'Вход — ИгроФорум' }) %>
+
+<h1>Вход</h1>
+
+<% if (error) { %>
+  <p class="error-message"><%= error %></p>
+<% } %>
+
+<form action="/login" method="POST" class="form-card">
+  <label for="username">Имя пользователя</label>
+  <input type="text" id="username" name="username" required>
+
+  <label for="password">Пароль</label>
+  <input type="password" id="password" name="password" required>
+
+  <button type="submit" class="btn-primary">Войти</button>
+</form>
+<p>Нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
+
+<%- include('_footer') %>

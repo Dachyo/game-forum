@@ -1,0 +1,17 @@
+<%- include('_header', { title: category.name + ' — ИгроФорум' }) %>
+
+<h1><%= category.name %></h1>
+
+<% if (threads.length === 0) { %>
+  <p class="empty-state">В этой категории пока нет тем.</p>
+<% } %>
+<ul class="thread-list">
+  <% threads.forEach(t => { %>
+    <li class="thread-item">
+      <a href="/threads/<%= t.id %>" class="thread-title"><%= t.title %></a>
+      <div class="thread-meta">автор <%= t.username %> · ответов: <%= t.post_count %></div>
+    </li>
+  <% }) %>
+</ul>
+
+<%- include('_footer') %>

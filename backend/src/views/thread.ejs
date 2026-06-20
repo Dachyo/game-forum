@@ -1,0 +1,25 @@
+<%- include('_header', { title: thread.title + ' — ИгроФорум' }) %>
+
+<a href="/category/<%= thread.slug %>" class="back-link">&larr; <%= thread.category_name %></a>
+<h1><%= thread.title %></h1>
+
+<div class="post-list">
+  <% posts.forEach(p => { %>
+    <div class="post-card">
+      <div class="post-author"><%= p.username %></div>
+      <div class="post-body"><%= p.body %></div>
+      <div class="post-date"><%= new Date(p.created_at).toLocaleString('ru-RU') %></div>
+    </div>
+  <% }) %>
+</div>
+
+<% if (currentUser) { %>
+  <form action="/threads/<%= thread.id %>/reply" method="POST" class="reply-form">
+    <textarea name="body" rows="4" placeholder="Ваш ответ..." required></textarea>
+    <button type="submit" class="btn-primary">Ответить</button>
+  </form>
+<% } else { %>
+  <p class="empty-state"><a href="/login">Войдите</a>, чтобы ответить в теме.</p>
+<% } %>
+
+<%- include('_footer') %>

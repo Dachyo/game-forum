@@ -1,0 +1,94 @@
+name: CI/CD — Deploy Game Forum
+
+# Пайплайн запускается при каждом push в ветку main —
+# именно это автоматизирует "доставку обновлений на сервер" из темы диплома
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}  # позволяет запустить пайплайн вручную из вкладки Actions
+
+jobs:
+  # --- Этап 1: тестирование ---
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
+
+      - name: Установка Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Установка зависимостей
+        run: npm ci
+
+      - name: Запуск тестов
+        run: npm test
+
+  # --- Этап 2: сборка и проверка, что Docker-образ собирается ---
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
+
+      - name: Сборка образа (только проверка, без публикации)
+        run: docker build -t game-forum-app:ci ./backend
+
+  # --- Этап 3: развёртывание на сервере по SSH ---
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # Деплоим только если пуш реально пришёл в main (а не из форка/PR)
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    steps:
+      - name: Checkout кода
+        uses: actions/checkout@v4
+
+      - name: Синхронизация файлов проекта на сервер
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "docker-compose.yml,backend"
+          target: ${{ secrets.DEPLOY_PATH }}
+          strip_components: 0
+
+      - name: Пересборка и перезапуск контейнеров на сервере
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}
+            echo "DB_USER=${{ secrets.DB_USER }}" > .env
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+            echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+            echo "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" >> .env
+            docker compose build
+            docker compose up -d
+            docker image prune -f
+            docker compose ps
+
+      - name: Проверка, что приложение действительно поднялось
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            sleep 5
+            curl -f http://localhost:3000/health
