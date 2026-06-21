@@ -4,7 +4,6 @@ const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Главная страница: список категорий + последние темы
 router.get('/', async (req, res, next) => {
   try {
     const categories = await pool.query('SELECT * FROM categories ORDER BY name');
@@ -23,7 +22,6 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// Темы внутри одной категории
 router.get('/category/:slug', async (req, res, next) => {
   try {
     const catResult = await pool.query('SELECT * FROM categories WHERE slug = $1', [req.params.slug]);

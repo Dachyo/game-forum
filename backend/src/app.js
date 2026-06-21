@@ -31,8 +31,6 @@ app.use(
 
 app.use(attachUser);
 
-// Health-check используется Docker healthcheck'ом и CI/CD пайплайном,
-// чтобы убедиться, что приложение реально поднялось перед переключением трафика
 app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
 app.use('/', authRoutes);
