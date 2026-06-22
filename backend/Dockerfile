@@ -6,7 +6,6 @@ RUN npm install --omit=dev
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Непривилегированный пользователь — контейнер не должен работать от root
 RUN addgroup -S forum && adduser -S forum -G forum
 
 COPY --from=deps /app/node_modules ./node_modules

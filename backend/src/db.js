@@ -1,7 +1,5 @@
 const { Pool } = require('pg');
 
-// Параметры подключения берутся из переменных окружения,
-// которые задаются в docker-compose.yml / .env
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 5432,
